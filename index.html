@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>加班打卡记录</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="./tailwindcss.js"></script>
+    <script src="./vue.global.js"></script>
+    <!-- <link href="./all.min.css" rel="stylesheet"> -->
     <style>
         body {
             background-color: #f8fafc;
@@ -44,12 +44,14 @@
         <header class="bg-white p-4 border-b sticky top-0 z-10">
             <div class="flex justify-between items-center mb-4">
                 <button @click="changeMonth(-1)"
-                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full"><i
-                        class="fas fa-chevron-left"></i></button>
+                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full">
+                    <img src="./SolarAltArrowLeftLinear.svg" alt="">
+                </button>
                 <h1 class="text-lg font-bold text-gray-800">{{ currentYear }}年 {{ currentMonth }}月</h1>
                 <button @click="changeMonth(1)"
-                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full"><i
-                        class="fas fa-chevron-right"></i></button>
+                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full">
+                    <img src="./SolarAltArrowRightLinear.svg" alt="">
+                </button>
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-center">
@@ -114,8 +116,9 @@
                         <h3 class="text-lg font-bold text-gray-800">
                             {{ formatDateTitle(editingDay?.dateStr) }}
                         </h3>
-                        <button @click="closeModal" class="text-gray-400 hover:text-gray-600"><i
-                                class="fas fa-times"></i></button>
+                        <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+                            <img src="./MaterialSymbolsCloseRounded.svg" alt="">
+                        </button>
                     </div>
 
                     <div class="mb-6">
@@ -247,7 +250,7 @@
                     }
                     showModal.value = true;
                     // 自动聚焦输入框 (用户体验优化)
-                    nextTick(() => { if (timeInput.value) timeInput.value.focus(); });
+                    // nextTick(() => { if (timeInput.value) timeInput.value.focus(); });
                 };
 
                 const saveRecord = () => {
