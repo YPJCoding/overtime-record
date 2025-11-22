@@ -2,324 +2,341 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>加班打卡记录</title>
-    <script src="./tailwindcss.js"></script>
-    <script src="./vue.global.js"></script>
-    <!-- <link href="./all.min.css" rel="stylesheet"> -->
-    <style>
-        body {
-            background-color: #f8fafc;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>加班打卡记录</title>
+  <script src="./js/tailwindcss.js"></script>
+  <script src="./js/vue.global.js"></script>
 
-        /* 隐藏滚动条 */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
+  <link rel="apple-touch-icon" href="./img/icon.jpg">
+  <meta name="apple-mobile-web-app-title" content="加班打卡">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-        /* 弹窗动画 */
-        .fade-enter-active,
-        .fade-leave-active {
-            transition: opacity 0.2s;
-        }
+  <style>
+    body {
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-        .fade-enter-from,
-        .fade-leave-to {
-            opacity: 0;
-        }
+    /* 隐藏滚动条 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
 
-        /* 解决移动端点击高亮问题 */
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-    </style>
+    /* 弹窗动画 */
+    .fade-enter-active,
+    .fade-leave-active {
+      transition: opacity 0.2s;
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+      opacity: 0;
+    }
+
+    /* 解决移动端点击高亮问题 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
 </head>
 
 <body>
-    <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-lg">
+<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-lg">
 
-        <header class="bg-white p-4 border-b sticky top-0 z-10">
-            <div class="flex justify-between items-center mb-4">
-                <button @click="changeMonth(-1)"
-                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full">
-                    <img src="./SolarAltArrowLeftLinear.svg" alt="">
-                </button>
-                <h1 class="text-lg font-bold text-gray-800">{{ currentYear }}年 {{ currentMonth }}月</h1>
-                <button @click="changeMonth(1)"
-                    class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full">
-                    <img src="./SolarAltArrowRightLinear.svg" alt="">
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 text-center">
-                <div class="bg-blue-50 p-2 rounded-lg">
-                    <p class="text-xs text-blue-500 mb-1">法定工作日</p>
-                    <p class="text-lg font-bold text-blue-700">{{ stats.statutoryWorkDays }} <span
-                            class="text-xs font-normal">天</span></p>
-                </div>
-                <div class="bg-orange-50 p-2 rounded-lg">
-                    <p class="text-xs text-orange-500 mb-1">加班天数</p>
-                    <p class="text-lg font-bold text-orange-700">{{ stats.overtimeCount }} <span
-                            class="text-xs font-normal">天</span></p>
-                </div>
-            </div>
-        </header>
-
-        <div class="p-2 flex-grow overflow-y-auto">
-            <div class="grid grid-cols-7 mb-2 text-center text-xs text-gray-400 font-medium">
-                <div class="text-red-300">日</div>
-                <div>一</div>
-                <div>二</div>
-                <div>三</div>
-                <div>四</div>
-                <div>五</div>
-                <div class="text-red-300">六</div>
-            </div>
-
-            <div class="grid grid-cols-7 gap-1">
-                <div v-for="n in firstDayOfWeek" :key="'empty-'+n"></div>
-
-                <div v-for="day in daysList" :key="day.dateStr"
-                    class="relative aspect-square border rounded-lg flex flex-col items-center justify-center active:scale-95 transition-transform duration-100"
-                    :class="[
-                    getDayBgColor(day),
-                    isToday(day.dateStr) ? 'ring-2 ring-blue-400 z-10' : ''
-                ]" @click="openEditModal(day)">
-                    <span class="absolute top-1 left-1.5 text-sm font-bold leading-none"
-                        :class="getDayTextColor(day)">{{ day.dayNum }}</span>
-
-                    <span v-if="day.isHoliday"
-                        class="absolute top-1 right-1 text-[10px] text-red-400 font-light">休</span>
-                    <span v-else-if="day.isMakeup"
-                        class="absolute top-1 right-1 text-[10px] text-gray-500 font-light">班</span>
-
-                    <div v-if="records[day.dateStr]" class="mt-3">
-                        <div class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-1 rounded">
-                            {{ records[day.dateStr] }}
-                        </div>
-                    </div>
-
-                    <div v-if="isQualify(records[day.dateStr])"
-                        class="absolute bottom-1 w-1 h-1 bg-green-500 rounded-full"></div>
-                </div>
-            </div>
-        </div>
-
-        <transition name="fade">
-            <div v-if="showModal" class="fixed inset-0 bg-black/60 flex items-end justify-center z-50 sm:items-center"
-                @click.self="closeModal">
-                <div class="bg-white w-full rounded-t-2xl p-6 sm:w-80 sm:rounded-2xl shadow-2xl animate-slide-up">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold text-gray-800">
-                            {{ formatDateTitle(editingDay?.dateStr) }}
-                        </h3>
-                        <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
-                            <img src="./MaterialSymbolsCloseRounded.svg" alt="">
-                        </button>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-xs font-medium text-gray-500 mb-2">下班时间</label>
-                        <input type="time" v-model="editingTime" ref="timeInput"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 text-center text-3xl font-mono font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <button @click="deleteRecord" v-if="records[editingDay?.dateStr]"
-                            class="col-span-1 bg-red-50 text-red-500 py-3 rounded-xl font-medium active:bg-red-100">
-                            删除记录
-                        </button>
-                        <button @click="saveRecord" :class="records[editingDay?.dateStr] ? 'col-span-1' : 'col-span-2'"
-                            class="bg-blue-600 text-white py-3 rounded-xl font-medium shadow-lg shadow-blue-200 active:bg-blue-700">
-                            确认保存
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </transition>
-
+  <header class="bg-white p-4 border-b sticky top-0 z-10">
+    <div class="flex justify-between items-center mb-4">
+      <button @click="changeMonth(-1)" class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m15 5l-6 7l6 7"/>
+        </svg>
+      </button>
+      <h1 class="text-lg font-bold text-gray-800">{{ currentYear }}年 {{ currentMonth }}月</h1>
+      <button @click="changeMonth(1)" class="w-10 h-10 flex items-center justify-center text-gray-500 active:bg-gray-100 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m9 5l6 7l-6 7"/>
+        </svg>
+      </button>
     </div>
 
-    <script>
-        const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+    <div class="grid grid-cols-2 gap-3 text-center">
+      <div class="bg-blue-50 p-2 rounded-lg">
+        <p class="text-xs text-blue-500 mb-1">法定工作日</p>
+        <p class="text-lg font-bold text-blue-700">{{ stats.statutoryWorkDays }} <span
+                class="text-xs font-normal">天</span></p>
+      </div>
+      <div class="bg-orange-50 p-2 rounded-lg">
+        <p class="text-xs text-orange-500 mb-1">加班天数</p>
+        <p class="text-lg font-bold text-orange-700">{{ stats.overtimeCount }} <span
+                class="text-xs font-normal">天</span></p>
+      </div>
+    </div>
+  </header>
 
-        createApp({
-            setup() {
-                // --- 状态管理 ---
-                const now = new Date();
-                const currentYear = ref(now.getFullYear());
-                const currentMonth = ref(now.getMonth() + 1);
-                const holidayData = ref({});
-                const records = ref({});
-                const showModal = ref(false);
-                const editingDay = ref(null);
-                const editingTime = ref('');
-                const timeInput = ref(null); // 用于聚焦
+  <div class="p-2 flex-grow overflow-y-auto">
+    <div class="grid grid-cols-7 mb-2 text-center text-xs text-gray-400 font-medium">
+      <div class="text-red-300">日</div>
+      <div>一</div>
+      <div>二</div>
+      <div>三</div>
+      <div>四</div>
+      <div>五</div>
+      <div class="text-red-300">六</div>
+    </div>
 
-                // --- 初始化 ---
-                onMounted(() => {
-                    const savedRecords = localStorage.getItem('overtime_records');
-                    if (savedRecords) records.value = JSON.parse(savedRecords);
-                    fetchHolidayData();
-                });
+    <div class="grid grid-cols-7 gap-1">
+      <div v-for="n in firstDayOfWeek" :key="'empty-'+n"></div>
 
-                watch(records, (newVal) => {
-                    localStorage.setItem('overtime_records', JSON.stringify(newVal));
-                }, { deep: true });
+      <div v-for="day in daysList" :key="day.dateStr"
+           class="relative aspect-square border rounded-lg flex flex-col items-center justify-center active:scale-95 transition-transform duration-100"
+           :class="[getDayBgColor(day), isToday(day.dateStr) ? 'ring-2 ring-blue-400 z-10' : '']"
+           @click="openEditModal(day)"
+      >
+        <span class="absolute top-1 left-1.5 text-sm font-bold leading-none" :class="getDayTextColor(day)">
+          {{ day.dayNum }}
+        </span>
 
-                // 简单的内存缓存，避免来回切换年份时重复请求
-                const holidayCache = {};
+        <span v-if="day.isHoliday" class="absolute top-1 right-1 text-[10px] text-red-400 font-light">
+          休
+        </span>
+        <span v-else-if="day.isMakeup" class="absolute top-1 right-1 text-[10px] text-gray-500 font-light">
+          班
+        </span>
 
-                const fetchHolidayData = async () => {
-                    const year = currentYear.value;
+        <div v-if="records[day.dateStr]" class="mt-3">
+          <div class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-1 rounded">
+            {{ records[day.dateStr] }}
+          </div>
+        </div>
 
-                    // 如果缓存里有这一年的数据，直接使用，不再发请求
-                    if (holidayCache[year]) {
-                        holidayData.value = holidayCache[year];
-                        return;
-                    }
+        <div v-if="isQualify(records[day.dateStr])" class="absolute bottom-1 w-1 h-1 bg-green-500 rounded-full"></div>
+      </div>
+    </div>
+  </div>
 
-                    // 暂时清空当前数据，防止新日历套用旧假期的显示 bug
-                    holidayData.value = {};
+  <transition name="fade">
+    <div v-if="showModal" class="fixed inset-0 bg-black/60 flex items-end justify-center z-50 sm:items-center" @click.self="closeModal">
+      <div class="bg-white w-full rounded-t-2xl p-6 sm:w-80 sm:rounded-2xl shadow-2xl animate-slide-up">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-lg font-bold text-gray-800">
+            {{ formatDateTitle(editingDay?.dateStr) }}
+          </h3>
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+              <path fill="currentColor" d="m12 13.4l-4.9 4.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7l4.9-4.9l-4.9-4.9q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.9 4.9l4.9-4.9q.275-.275.7-.275t.7.275t.275.7t-.275.7L13.4 12l4.9 4.9q.275.275.275.7t-.275.7t-.7.275t-.7-.275z"/>
+            </svg>
+          </button>
+        </div>
 
-                    const url = `https://timor.tech/api/holiday/year/${year}?type=Y&week=Y`;
-                    try {
-                        const res = await fetch(url);
-                        const json = await res.json();
-                        if (json.code === 0) {
-                            holidayData.value = json.holiday;
-                            // 写入缓存
-                            holidayCache[year] = json.holiday;
-                        }
-                    } catch (e) {
-                        console.error("API Error", e);
-                    }
-                };
+        <div class="mb-6">
+          <label class="block text-xs font-medium text-gray-500 mb-2">下班时间</label>
+          <input type="time" v-model="editingTime" ref="timeInput"
+                 class="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 text-center text-3xl font-mono font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
 
-                // --- 计算逻辑 ---
-                const firstDayOfWeek = computed(() => new Date(currentYear.value, currentMonth.value - 1, 1).getDay());
+        <div class="grid grid-cols-2 gap-3">
+          <button @click="deleteRecord" v-if="records[editingDay?.dateStr]"
+                  class="col-span-1 bg-red-50 text-red-500 py-3 rounded-xl font-medium active:bg-red-100">
+            删除记录
+          </button>
+          <button @click="saveRecord" :class="records[editingDay?.dateStr] ? 'col-span-1' : 'col-span-2'"
+                  class="bg-blue-600 text-white py-3 rounded-xl font-medium shadow-lg shadow-blue-200 active:bg-blue-700">
+            确认保存
+          </button>
+        </div>
+      </div>
+    </div>
+  </transition>
 
-                const daysList = computed(() => {
-                    const days = [];
-                    const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                        const dateKey = dateStr.substring(5);
-                        const weekDay = new Date(currentYear.value, currentMonth.value - 1, i).getDay();
+</div>
 
-                        let isHoliday = false, isMakeup = false, isStatutoryWorkDay = true;
-                        const apiInfo = holidayData.value[dateKey];
+<script>
+  const {createApp, ref, computed, onMounted, watch, nextTick} = Vue;
 
-                        if (apiInfo) {
-                            if (apiInfo.holiday === false) { isMakeup = true; }
-                            else { isHoliday = true; isStatutoryWorkDay = false; }
-                        } else if (weekDay === 0 || weekDay === 6) {
-                            isHoliday = true; isStatutoryWorkDay = false;
-                        }
+  createApp({
+    setup() {
+      // --- 状态管理 ---
+      const now = new Date();
+      const currentYear = ref(now.getFullYear());
+      const currentMonth = ref(now.getMonth() + 1);
+      const holidayData = ref({});
+      const records = ref({});
+      const showModal = ref(false);
+      const editingDay = ref(null);
+      const editingTime = ref('');
+      const timeInput = ref(null); // 用于聚焦
 
-                        days.push({ dayNum: i, dateStr, isHoliday, isMakeup, isStatutoryWorkDay });
-                    }
+      // --- 初始化 ---
+      onMounted(() => {
+        const savedRecords = localStorage.getItem('overtime_records');
+        if (savedRecords) records.value = JSON.parse(savedRecords);
+        fetchHolidayData();
+      });
 
-                    return days;
-                });
+      watch(records, (newVal) => {
+        localStorage.setItem('overtime_records', JSON.stringify(newVal));
+      }, {deep: true});
 
-                const stats = computed(() => {
-                    const statutoryWorkDays = daysList.value.filter(d => d.isStatutoryWorkDay).length;
-                    const monthPrefix = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}`;
-                    // 只统计当月有记录的天数
-                    const overtimeCount = Object.keys(records.value).filter(d => d.startsWith(monthPrefix)).length;
-                    return { statutoryWorkDays, overtimeCount };
-                });
+      // 简单的内存缓存，避免来回切换年份时重复请求
+      const holidayCache = {};
 
-                // --- 辅助函数 ---
-                const getCurrentTimeStr = () => {
-                    const d = new Date();
-                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                };
+      const fetchHolidayData = async () => {
+        const year = currentYear.value;
 
-                const openEditModal = (day) => {
-                    editingDay.value = day;
-                    // 如果有记录，显示记录；如果没有，自动填入当前系统时间
-                    if (records.value[day.dateStr]) {
-                        editingTime.value = records.value[day.dateStr];
-                    } else {
-                        editingTime.value = getCurrentTimeStr();
-                    }
-                    showModal.value = true;
-                    // 自动聚焦输入框 (用户体验优化)
-                    // nextTick(() => { if (timeInput.value) timeInput.value.focus(); });
-                };
+        // 如果缓存里有这一年的数据，直接使用，不再发请求
+        if (holidayCache[year]) {
+          holidayData.value = holidayCache[year];
+          return;
+        }
 
-                const saveRecord = () => {
-                    if (editingTime.value) records.value[editingDay.value.dateStr] = editingTime.value;
-                    closeModal();
-                };
+        // 暂时清空当前数据，防止新日历套用旧假期的显示 bug
+        holidayData.value = {};
 
-                const deleteRecord = () => {
-                    if (records.value[editingDay.value.dateStr]) delete records.value[editingDay.value.dateStr];
-                    closeModal();
-                };
+        const url = `https://timor.tech/api/holiday/year/${year}?type=Y&week=Y`;
+        try {
+          const res = await fetch(url);
+          const json = await res.json();
+          if (json.code === 0) {
+            holidayData.value = json.holiday;
+            // 写入缓存
+            holidayCache[year] = json.holiday;
+          }
+        } catch (e) {
+          console.error("API Error", e);
+        }
+      };
 
-                const closeModal = () => { showModal.value = false; editingDay.value = null; };
+      // --- 计算逻辑 ---
+      const firstDayOfWeek = computed(() => new Date(currentYear.value, currentMonth.value - 1, 1).getDay());
 
-                const changeMonth = (offset) => {
-                    let newMonth = currentMonth.value + offset;
-                    let newYear = currentYear.value;
+      const daysList = computed(() => {
+        const days = [];
+        const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+          const dateKey = dateStr.substring(5);
+          const weekDay = new Date(currentYear.value, currentMonth.value - 1, i).getDay();
 
-                    // 1. 计算新的年月
-                    if (newMonth > 12) {
-                        newMonth = 1;
-                        newYear++;
-                    } else if (newMonth < 1) {
-                        newMonth = 12;
-                        newYear--;
-                    }
+          let isHoliday = false, isMakeup = false, isStatutoryWorkDay = true;
+          const apiInfo = holidayData.value[dateKey];
 
-                    // 2. 记录年份是否发生了跨越
-                    const yearHasChanged = newYear !== currentYear.value;
-
-                    // 3. 【关键修正】先更新 Vue 的响应式状态
-                    currentMonth.value = newMonth;
-                    currentYear.value = newYear;
-
-                    // 4. 状态更新后，再去请求 API
-                    // 此时 fetchHolidayData 内部读取到的 currentYear.value 才是最新的
-                    if (yearHasChanged) {
-                        fetchHolidayData();
-                    }
-                };
-
-                const getDayBgColor = (day) => {
-                    if (day.isHoliday && !day.isMakeup) return 'bg-red-50/50 border-red-50'; // 淡红色背景
-                    if (day.isMakeup) return 'bg-gray-100 border-gray-200'; // 灰色背景
-                    return 'bg-white border-gray-100';
-                };
-
-                const getDayTextColor = (day) => {
-                    if (day.isHoliday && !day.isMakeup) return 'text-red-400';
-                    if (day.isMakeup) return 'text-gray-800';
-                    return 'text-gray-700';
-                };
-
-                const isToday = (dateStr) => {
-                    const today = new Date();
-                    return dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                };
-
-                const isQualify = (timeStr) => timeStr >= "21:00";
-                const formatDateTitle = (str) => str ? str.split('-').join('.') : '';
-
-                return {
-                    currentYear, currentMonth, stats, firstDayOfWeek, daysList, records,
-                    showModal, editingDay, editingTime, timeInput,
-                    openEditModal, closeModal, saveRecord, deleteRecord, changeMonth,
-                    getDayBgColor, getDayTextColor, isToday, isQualify, formatDateTitle
-                };
+          if (apiInfo) {
+            if (apiInfo.holiday === false) {
+              isMakeup = true;
+            } else {
+              isHoliday = true;
+              isStatutoryWorkDay = false;
             }
-        }).mount('#app');
-    </script>
+          } else if (weekDay === 0 || weekDay === 6) {
+            isHoliday = true;
+            isStatutoryWorkDay = false;
+          }
+
+          days.push({dayNum: i, dateStr, isHoliday, isMakeup, isStatutoryWorkDay});
+        }
+
+        return days;
+      });
+
+      const stats = computed(() => {
+        const statutoryWorkDays = daysList.value.filter(d => d.isStatutoryWorkDay).length;
+        const monthPrefix = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}`;
+        // 只统计当月有记录的天数
+        const overtimeCount = Object.keys(records.value).filter(d => d.startsWith(monthPrefix)).length;
+        return {statutoryWorkDays, overtimeCount};
+      });
+
+      // --- 辅助函数 ---
+      const getCurrentTimeStr = () => {
+        const d = new Date();
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      };
+
+      const openEditModal = (day) => {
+        editingDay.value = day;
+        // 如果有记录，显示记录；如果没有，自动填入当前系统时间
+        if (records.value[day.dateStr]) {
+          editingTime.value = records.value[day.dateStr];
+        } else {
+          editingTime.value = getCurrentTimeStr();
+        }
+        showModal.value = true;
+        // 自动聚焦输入框 (用户体验优化)
+        // nextTick(() => { if (timeInput.value) timeInput.value.focus(); });
+      };
+
+      const saveRecord = () => {
+        if (editingTime.value) records.value[editingDay.value.dateStr] = editingTime.value;
+        closeModal();
+      };
+
+      const deleteRecord = () => {
+        if (records.value[editingDay.value.dateStr]) delete records.value[editingDay.value.dateStr];
+        closeModal();
+      };
+
+      const closeModal = () => {
+        showModal.value = false;
+        editingDay.value = null;
+      };
+
+      const changeMonth = (offset) => {
+        let newMonth = currentMonth.value + offset;
+        let newYear = currentYear.value;
+
+        // 1. 计算新的年月
+        if (newMonth > 12) {
+          newMonth = 1;
+          newYear++;
+        } else if (newMonth < 1) {
+          newMonth = 12;
+          newYear--;
+        }
+
+        // 2. 记录年份是否发生了跨越
+        const yearHasChanged = newYear !== currentYear.value;
+
+        // 3. 【关键修正】先更新 Vue 的响应式状态
+        currentMonth.value = newMonth;
+        currentYear.value = newYear;
+
+        // 4. 状态更新后，再去请求 API
+        // 此时 fetchHolidayData 内部读取到的 currentYear.value 才是最新的
+        if (yearHasChanged) {
+          fetchHolidayData();
+        }
+      };
+
+      const getDayBgColor = (day) => {
+        if (day.isHoliday && !day.isMakeup) return 'bg-red-50/50 border-red-50'; // 淡红色背景
+        if (day.isMakeup) return 'bg-gray-100 border-gray-200'; // 灰色背景
+        return 'bg-white border-gray-100';
+      };
+
+      const getDayTextColor = (day) => {
+        if (day.isHoliday && !day.isMakeup) return 'text-red-400';
+        if (day.isMakeup) return 'text-gray-800';
+        return 'text-gray-700';
+      };
+
+      const isToday = (dateStr) => {
+        const today = new Date();
+        return dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      };
+
+      const isQualify = (timeStr) => timeStr >= "21:00";
+      const formatDateTitle = (str) => str ? str.split('-').join('.') : '';
+
+      return {
+        currentYear, currentMonth, stats, firstDayOfWeek, daysList, records,
+        showModal, editingDay, editingTime, timeInput,
+        openEditModal, closeModal, saveRecord, deleteRecord, changeMonth,
+        getDayBgColor, getDayTextColor, isToday, isQualify, formatDateTitle
+      };
+    }
+  }).mount('#app');
+</script>
 </body>
 
 </html>
